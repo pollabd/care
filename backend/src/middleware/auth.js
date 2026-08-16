@@ -8,7 +8,10 @@ export async function protect(req, res, next) {
       return res.status(401).json({ message: 'Not authorized' });
     }
     const token = header.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'this is a secret key for backend');
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ message: 'Not authorized' });

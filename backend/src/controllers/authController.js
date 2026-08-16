@@ -3,7 +3,10 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 function signToken(userId) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'this is a secret key for backend', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 }
