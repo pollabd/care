@@ -32,7 +32,8 @@ The backend Dockerfile uses **repo-root build paths** (`COPY backend/...`), so i
 
 - **Root Directory:** leave empty (repo root)
 - **Dockerfile Path:** `backend/Dockerfile`
-- **Env vars:** `PORT=4000`, `MONGO_URI` (MongoDB Atlas URL), `JWT_SECRET`
+- **Env vars:** `PORT=4000`, `MONGO_URI` (MongoDB Atlas URL **must include the database name**, e.g. `...mongodb.net/secure_notes?appName=Cluster0`), `JWT_SECRET`
+- **Critical:** the backend refuses to start if `MONGO_URI` has no database name (that would silently connect to the default `test` database and desync environments). Always end the URI with `/secure_notes`.
 - Atlas free tier requires the source IP to be allowed under **Network Access** (use `0.0.0.0/0` to allow anywhere, since Render's IPs are dynamic).
 
 ### Vercel (frontend)
@@ -56,7 +57,7 @@ Vercel builds the frontend from `frontend/` (its own `next build`, not the Docke
    ```
    *Frontend will run on `http://localhost:3002` and Backend on `http://localhost:4000`.*
 
-   By default the backend uses the local `mongo` container. To use MongoDB Atlas instead, copy `.env.example` to `.env`, fill in the real Atlas password, then rebuild the backend (`docker compose up -d --build backend`).
+   By default the backend uses the local `mongo` container. To use MongoDB Atlas instead, copy `.env.example` to `.env`, fill in the real Atlas password, then rebuild the backend (`docker compose up -d --build backend`). The Atlas URL **must** end in `/secure_notes` — starting with a DB-name-less URI now fails on purpose (see Deployment).
 
 ---
 

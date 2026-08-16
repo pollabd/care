@@ -39,12 +39,14 @@ export default function AdminPage() {
   const [postPage, setPostPage] = useState(1);
   const [postPages, setPostPages] = useState(1);
   const [interestGroups, setInterestGroups] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
   const [interests, setInterests] = useState('');
   const [userId, setUserId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [userPosts, setUserPosts] = useState([]);
   const [userPostsPage, setUserPostsPage] = useState(1);
   const [userPostsPages, setUserPostsPages] = useState(1);
@@ -93,13 +95,22 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadAllUsers = useCallback(async () => {
+    try {
+      const data = await api('/users?page=1&limit=100');
+      setAllUsers(data.users);
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+
   const loadUserPosts = useCallback(
-    async (page) => {
-      if (!userId) {
+    async (page, id = userId) => {
+      if (!id) {
         return;
       }
       try {
-        const data = await api(`/posts/user/${userId}?page=${page}&limit=${LIMIT}`);
+        const data = await api(`/posts/user/${id}?page=${page}&limit=${LIMIT}`);
         setUserPosts(data.posts);
         setUserPostsPages(data.pagination.pages);
         setUserPostsPage(page);
@@ -109,6 +120,35 @@ export default function AdminPage() {
     },
     [userId]
   );
+
+  function selectUser(user) {
+    setUserId(user._id);
+    setSearchTerm('');
+    loadUserPosts(1, user._id);
+  }
+
+  function clearSelection() {
+    setUserId('');
+    setSearchTerm('');
+    setUserPosts([]);
+    setUserPostsPages(1);
+    setUserPostsPage(1);
+  }
+
+  function handleSearch(e) {
+    const value = e.target.value;
+    setSearchTerm(value);
+    const term = value.trim().toLowerCase();
+    if (!term) {
+      return;
+    }
+    const matches = allUsers.filter(
+      (u) => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
+    );
+    if (matches.length === 1 && matches[0]._id !== userId) {
+      selectUser(matches[0]);
+    }
+  }
 
   useEffect(() => {
     const token = window.localStorage.getItem('token');
@@ -133,7 +173,8 @@ export default function AdminPage() {
     loadNotes(1);
     loadPosts(1);
     loadInterests();
-  }, [router, loadUsers, loadNotes, loadPosts, loadInterests]);
+    loadAllUsers();
+  }, [router, loadUsers, loadNotes, loadPosts, loadInterests, loadAllUsers]);
 
   function handleLogout() {
     window.localStorage.removeItem('token');
@@ -161,6 +202,7 @@ export default function AdminPage() {
       setRole('user');
       setMessage('User added');
       loadUsers(1);
+      loadAllUsers();
     } catch (err) {
       setError(err.message);
     }
@@ -188,10 +230,20 @@ export default function AdminPage() {
       await api(`/users/${id}`, { method: 'DELETE' });
       setMessage('User removed');
       loadUsers(userPage);
+      loadAllUsers();
     } catch (err) {
       setError(err.message);
     }
   }
+
+  const searchMatches = searchTerm.trim()
+    ? allUsers.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.trim().toLowerCase())
+      )
+    : [];
+  const selectedUser = allUsers.find((u) => u._id === userId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -426,21 +478,45 @@ export default function AdminPage() {
               <Search />
               Posts by a user
             </CardTitle>
-            <CardDescription>Paste a user id to run the $lookup aggregation.</CardDescription>
+            <CardDescription>Search by name or email to view a user's posts.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative">
               <Input
-                placeholder="User id"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                className="sm:max-w-sm"
+                placeholder="Search posts by name or email"
+                value={searchTerm}
+                onChange={handleSearch}
               />
-              <Button onClick={() => loadUserPosts(1)}>
-                <Search />
-                Load posts
-              </Button>
+              {searchTerm.trim() && (
+                <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-md">
+                  {searchMatches.length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">No users match.</p>
+                  )}
+                  {searchMatches.map((u) => (
+                    <button
+                      key={u._id}
+                      type="button"
+                      onClick={() => selectUser(u)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-muted"
+                    >
+                      <span className="font-medium">{u.name}</span>
+                      <span className="text-muted-foreground">{u.email}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {userId && selectedUser && (
+              <div className="mt-3 flex items-center justify-between rounded-md border bg-muted/50 px-3 py-2">
+                <span className="text-sm">
+                  Showing posts by <span className="font-medium">{selectedUser.name}</span>{' '}
+                  <span className="text-muted-foreground">({selectedUser.email})</span>
+                </span>
+                <Button size="sm" variant="ghost" onClick={clearSelection}>
+                  Clear
+                </Button>
+              </div>
+            )}
             <div className="mt-4 space-y-3">
               {userPosts.length === 0 && userId && (
                 <p className="py-6 text-center text-sm text-muted-foreground">No posts found for this user.</p>
@@ -476,7 +552,7 @@ export default function AdminPage() {
               <BookOpen />
               All posts
             </CardTitle>
-            <CardDescription>Posts visible to everyone. Copy a post's user id to query above.</CardDescription>
+            <CardDescription>Posts visible to everyone.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -492,7 +568,6 @@ export default function AdminPage() {
                     </Badge>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{post.content}</p>
-                  <p className="mt-2 text-xs text-muted-foreground/70">post id: {post._id}</p>
                 </div>
               ))}
             </div>
