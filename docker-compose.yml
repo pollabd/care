@@ -1,0 +1,35 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: secure-notes-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: secure-notes-backend
+    restart: unless-stopped
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/secure_notes
+      - JWT_SECRET=change_this_secret_key_for_production
+      - JWT_EXPIRES_IN=7d
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    container_name: secure-notes-frontend
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
