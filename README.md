@@ -32,8 +32,7 @@ The backend Dockerfile uses **repo-root build paths** (`COPY backend/...`), so i
 
 - **Root Directory:** leave empty (repo root)
 - **Dockerfile Path:** `backend/Dockerfile`
-- **Env vars:** `PORT=4000`, `MONGO_URI` (MongoDB Atlas URL **must include the database name**, e.g. `...mongodb.net/secure_notes?appName=Cluster0`), `JWT_SECRET`
-
+- **Env vars:** `PORT=4000`, `MONGO_URI` (MongoDB Atlas URL **must include the database name**, e.g. `...mongodb.net/secure_notes?appName=Cluster0`), `JWT_SECRET` should be included.
 
 
 ### Vercel (frontend)
