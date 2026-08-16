@@ -10,7 +10,7 @@ function getDbName(uri) {
 }
 
 export async function connectDB() {
-  const uri = process.env.MONGO_URI || 'mongodb://mongo:27017/secure_notes';
+  const uri = process.env.MONGO_URI || 'mongodb://mongo:27017/secure_notes'; // docker mongo
   if (!getDbName(uri)) {
     throw new Error('MONGO_URI must include a database name (use /secure_notes)');
   }
