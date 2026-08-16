@@ -24,7 +24,7 @@
 
 ## Deployment
 
-Backend is deployed on **Render**; frontend is deployed on **Vercel**; both use the same MongoDB Atlas database.
+Backend is deployed on **Render**; frontend is deployed on **Vercel**; 
 
 ### Render (backend)
 
