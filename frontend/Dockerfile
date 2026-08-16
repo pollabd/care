@@ -7,11 +7,11 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 ENV PORT=3000
 
-COPY package*.json ./
+COPY frontend/package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY frontend/ .
 
 RUN npm run build
 
