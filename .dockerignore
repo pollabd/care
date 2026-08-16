@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/.next
+**/.env
+*.log
+README.md
+INTERVIEW_PREP.md
+SEED_DATA.md
+Backend Interview Task.pdf
