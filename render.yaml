@@ -2,8 +2,7 @@ services:
   - type: web
     name: secure-notes-backend
     env: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    rootDir: backend
     region: oregon
     plan: starter
     envVars:
@@ -19,8 +18,7 @@ services:
   - type: web
     name: secure-notes-frontend
     env: docker
-    dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
+    rootDir: frontend
     region: oregon
     plan: starter
     envVars:
